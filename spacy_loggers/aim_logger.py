@@ -42,7 +42,7 @@ def aim_logger_v1(
                 console_log_step(info)
                 if info is not None:
                     epoch = info['epoch']
-                    step = None
+                    step = info['step']
 
                     score = info['score']
                     other_scores = info['other_scores']
