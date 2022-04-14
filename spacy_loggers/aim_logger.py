@@ -20,7 +20,7 @@ except ImportError:
 
 # entry point: spacy.AimLogger.v1
 def aim_logger_v1(
-    repo: Optional[str] = '.',
+    repo: Optional[str] = ".",
     experiment_name: Optional[str] = None,
     run_hash: Optional[str] = None,
 
@@ -28,14 +28,12 @@ def aim_logger_v1(
     
     console = console_logger(progress_bar=False)
     # aim_run, console_log_step, console_finalize = setup_aim(experiment_name=experiment_name)
-    def setup_aim(nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr, experiment_name:str='') \
+    def setup_aim(nlp: "Language", stdout: IO = sys.stdout, stderr: IO = sys.stderr, experiment_name:str="") \
         -> Union[Run, Callable[[Dict[str, Any]], None], Callable[[], None]]:
             config = nlp.config.interpolate()
-            config_dot = util.dict_to_dot(config)
-            config = util.dot_to_dict(config_dot)
 
             aim_run = Run(repo = repo, experiment=experiment_name, run_hash=run_hash)
-            aim_run['config'] = config
+            aim_run["config"] = config
 
             console = console_logger(progress_bar=False)
             console_log_step, console_finalize = console(nlp, stdout, stderr)
@@ -43,26 +41,29 @@ def aim_logger_v1(
             def aim_log_step(info: Optional[Dict[str, Any]]):
                 console_log_step(info)
                 if info is not None:
-                    epoch = info['epoch'] if info['epoch'] is not None else -1
-                    step = info['step'] if info['step'] is not None else -1
+                    epoch = info["epoch"]
+                    step = None
 
                     score = info["score"]
                     other_scores = info["other_scores"]
                     losses = info["losses"]
-                    aim_run.track(score , name = "Score", context = {'type':'score'})
+                    aim_run.track(score , name = "Score", context = {"type":"score"})
                     if losses:
                         for loss_name, loss_value in losses.items():
-                            aim_run.track(loss_value, name = loss_name, context = {'type':f'loss_{loss_name}'}, epoch=epoch, step=step)
+                            aim_run.track(loss_value, name=loss_name, context={"type":f"loss_{loss_name}"}, epoch=epoch, step=step)
 
                     if isinstance(other_scores, dict):
-                        for loss_name, loss_value in other_scores.items():
+                        for score_name, loss_value in other_scores.items():
                             if not isinstance(loss_value, dict):
-                                aim_run.track(loss_value, name = loss_name, context = {'type':f'other_loss_{loss_name}'}, epoch=epoch, step=step)
+                                aim_run.track(loss_value, name=loss_name, context={"type":f"other_scores_{score_name}"}, epoch=epoch, step=step)
 
 
             def aim_finalize():
+                nonlocal aim_run
                 console_finalize()
                 aim_run.close()
+                aim_run = None
+
 
             return aim_log_step, aim_finalize
 
