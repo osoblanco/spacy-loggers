@@ -10,6 +10,7 @@ library.
 
 `spacy-loggers` currently provides loggers for:
 
+- [Aim](https://aimstack.io/)
 - [Weights & Biases](https://www.wandb.com)
 
 If you'd like to add a new logger or logging option, please submit a PR to this
